@@ -13,7 +13,7 @@ import io.temporal.worker.WorkerFactory;
 @Configuration
 public class TemporalConfig {
 
-    private String temporalServiceAddress = "127.0.0.1:7233";
+    private String temporalServiceAddress = "127.0.0.1:7233";  // Ensure this is the correct address
     private String temporalNamespace = "default";
 
     @Bean

@@ -1,12 +1,21 @@
 package com.example;
 
+import com.example.temporal.WorkflowImpl;
+import com.example.temporal.WorkFlow;
+import com.example.temporal.ActivityImpl;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import com.example.PlaceOrderServiceGrpc.PlaceOrderServiceBlockingStub;
 import com.example.SetOrderAcceptedServiceGrpc.SetOrderAcceptedServiceBlockingStub;
 import com.example.SetOrderPickedUpServiceGrpc.SetOrderPickedUpServiceBlockingStub;
 import com.example.SetOrderDeliveredServiceGrpc.SetOrderDeliveredServiceBlockingStub;
-
+import com.example.OrderRequest;
+import com.example.OrderResponse;
+import io.temporal.client.WorkflowClient;
+import io.temporal.client.WorkflowOptions;
+import io.temporal.serviceclient.WorkflowServiceStubs;
+import io.temporal.worker.Worker;
+import io.temporal.worker.WorkerFactory;
 
 public class GrpcClient {
 
@@ -51,9 +60,10 @@ public class GrpcClient {
     }
 
     public static void main(String[] args) {
+        // Initialize gRPC client
         GrpcClient client = new GrpcClient("localhost", 9090);
 
-        int orderId = 9;
+        int orderId = 6;
 
         // Place Order
         OrderResponse placeOrderResponse = client.placeOrder(orderId);
@@ -70,6 +80,27 @@ public class GrpcClient {
         // Set Order Delivered
         OrderResponse deliveredResponse = client.setOrderDelivered(orderId);
         System.out.println("Set Order Delivered Response: " + deliveredResponse.getStatus());
+
+        // Setting up Temporal
+        WorkflowServiceStubs service = WorkflowServiceStubs.newInstance();
+        WorkflowClient workflowClient = WorkflowClient.newInstance(service);
+        WorkerFactory factory = WorkerFactory.newInstance(workflowClient);
+        Worker worker = factory.newWorker("OrderTaskQueue");
+
+        worker.registerWorkflowImplementationTypes(WorkflowImpl.class);
+        worker.registerActivitiesImplementations(new ActivityImpl());
+
+        factory.start();
+
+        // Trigger Temporal workflow
+        WorkFlow workflow = workflowClient.newWorkflowStub(
+                WorkFlow.class,
+                WorkflowOptions.newBuilder().setTaskQueue("OrderTaskQueue").build());
+
+        // Start Workflow Execution
+        WorkflowClient.start(workflow::executeWorkflow);
+
+
 
         client.shutdown();
     }
