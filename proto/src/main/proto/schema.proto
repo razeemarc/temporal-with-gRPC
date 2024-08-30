@@ -1,0 +1,34 @@
+syntax="proto3";
+package com.example;
+
+option java_multiple_files=true;
+// Shared request message containing the order ID
+message OrderRequest {
+  string orderId = 1;
+
+}
+
+// Shared response message containing the status of the operation
+message OrderResponse {
+  string status = 1;
+}
+
+// Service definition for placing an order
+service PlaceOrderService {
+  rpc PlaceOrder(OrderRequest) returns (OrderResponse);
+}
+
+// Service definition for setting an order as accepted
+service SetOrderAcceptedService {
+  rpc SetOrderAccepted(OrderRequest) returns (OrderResponse);
+}
+
+// Service definition for setting an order as delivered
+service SetOrderDeliveredService {
+  rpc SetOrderDelivered(OrderRequest) returns (OrderResponse);
+}
+
+// Service definition for setting an order as picked up
+service SetOrderPickedUpService {
+  rpc SetOrderPickedUp(OrderRequest) returns (OrderResponse);
+}
